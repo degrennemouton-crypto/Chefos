@@ -1,0 +1,400 @@
+cat > /mnt/user-data/outputs/index.html << 'HTMLEOF'
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="ChefOS"/>
+<meta name="theme-color" content="#0f1117"/>
+<title>ChefOS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#0f1117;font-family:'DM Sans','Segoe UI',sans-serif;color:#f0f0f0;overscroll-behavior:none;}
+input[type=number]{-moz-appearance:textfield;}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;}
+@keyframes pulse{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useRef}=React;
+const T={bg:"#0f1117",card:"#1a1d27",cb:"#2a2d3a",accent:"#ff6b35",as:"rgba(255,107,53,0.15)",green:"#2ecc71",gs:"rgba(46,204,113,0.15)",red:"#e74c3c",rs:"rgba(231,76,60,0.15)",yellow:"#f39c12",ys:"rgba(243,156,18,0.15)",text:"#f0f0f0",muted:"#7a7f99",blue:"#4a9eff",bs:"rgba(74,158,255,0.15)",purple:"#a855f7",ps:"rgba(168,85,247,0.15)"};
+
+function Badge({color,children}){
+  const m={red:[T.rs,T.red],green:[T.gs,T.green],yellow:[T.ys,T.yellow],blue:[T.bs,T.blue],purple:[T.ps,T.purple],orange:[T.as,T.accent]};
+  const [bg,fg]=m[color]||m.blue;
+  return <span style={{background:bg,color:fg,borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:700,letterSpacing:0.5}}>{children}</span>;
+}
+function Card({children,style}){return <div style={{background:T.card,border:`1px solid ${T.cb}`,borderRadius:16,padding:16,marginBottom:12,...style}}>{children}</div>;}
+function ST({children}){return <div style={{fontSize:11,fontWeight:800,letterSpacing:2,color:T.muted,textTransform:"uppercase",marginBottom:10,marginTop:4}}>{children}</div>;}
+function BigBtn({icon,label,sublabel,color,onClick}){
+  return <button onClick={onClick} style={{flex:1,padding:"14px 8px",borderRadius:14,background:color+"18",border:`1.5px solid ${color}50`,display:"flex",flexDirection:"column",alignItems:"center",gap:5,cursor:"pointer"}}>
+    <span style={{fontSize:26}}>{icon}</span>
+    <span style={{fontSize:12,fontWeight:800,color,lineHeight:1.2,textAlign:"center"}}>{label}</span>
+    <span style={{fontSize:10,color:T.muted,textAlign:"center",lineHeight:1.3}}>{sublabel}</span>
+  </button>;
+}
+
+function ScanModal({mode,onClose}){
+  const [step,setStep]=useState("capture");
+  const [result,setResult]=useState(null);
+  const fileRef=useRef();
+  const fake={
+    etiquette:{produit:"Entrecôte de bœuf",fournisseur:"Socopa Viandes",lot:"FR-75-234-B · 240521",dlc:"24/05/2026",poids:"2,4 kg",temp:"3°C"},
+    facture:{fournisseur:"Metro Cash & Carry",date:"21/05/2026",articles:[{nom:"Filet de bœuf",qte:"4 kg",pu:"42,50€",total:"170,00€"},{nom:"Saumon frais",qte:"3 kg",pu:"18,90€",total:"56,70€"},{nom:"Crème liquide 35%",qte:"6 L",pu:"3,20€",total:"19,20€"},{nom:"Farine T55",qte:"10 kg",pu:"1,40€",total:"14,00€"}],total:"259,90€"}
+  };
+  const handleFile=(e)=>{if(e.target.files?.[0]){setStep("analyzing");setTimeout(()=>{setResult(fake[mode]);setStep("result");},2200);}};
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:100,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"flex-end"}}>
+      <div style={{width:"100%",maxWidth:420,margin:"0 auto",background:T.card,borderRadius:"24px 24px 0 0",padding:"24px 20px 40px",border:`1px solid ${T.cb}`}}>
+        <div style={{width:40,height:4,background:T.cb,borderRadius:2,margin:"0 auto 20px"}}/>
+        {step==="capture"&&<>
+          <div style={{fontSize:16,fontWeight:800,color:T.text,marginBottom:6}}>{mode==="etiquette"?"📸 Scanner une étiquette viande":"🧾 Scanner une facture"}</div>
+          <div style={{fontSize:13,color:T.muted,marginBottom:20}}>{mode==="etiquette"?"Prends l'étiquette en photo — lot, DLC et poids lus automatiquement.":"Prends la facture en photo — articles importés dans les stocks."}</div>
+          <div onClick={()=>fileRef.current?.click()} style={{background:"#0a0c12",borderRadius:16,height:180,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",border:`2px dashed ${T.accent}60`,cursor:"pointer",marginBottom:16,position:"relative"}}>
+            <div style={{position:"absolute",top:14,left:14,width:22,height:22,borderTop:`3px solid ${T.accent}`,borderLeft:`3px solid ${T.accent}`,borderRadius:"4px 0 0 0"}}/>
+            <div style={{position:"absolute",top:14,right:14,width:22,height:22,borderTop:`3px solid ${T.accent}`,borderRight:`3px solid ${T.accent}`,borderRadius:"0 4px 0 0"}}/>
+            <div style={{position:"absolute",bottom:14,left:14,width:22,height:22,borderBottom:`3px solid ${T.accent}`,borderLeft:`3px solid ${T.accent}`,borderRadius:"0 0 0 4px"}}/>
+            <div style={{position:"absolute",bottom:14,right:14,width:22,height:22,borderBottom:`3px solid ${T.accent}`,borderRight:`3px solid ${T.accent}`,borderRadius:"0 0 4px 0"}}/>
+            <span style={{fontSize:36}}>📷</span>
+            <div style={{fontSize:13,color:T.muted,marginTop:8}}>Appuie pour prendre la photo</div>
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={handleFile}/>
+          <button onClick={onClose} style={{width:"100%",padding:12,borderRadius:10,border:`1px solid ${T.cb}`,background:"transparent",color:T.muted,fontWeight:700,fontSize:13,cursor:"pointer"}}>Annuler</button>
+        </>}
+        {step==="analyzing"&&<div style={{textAlign:"center",padding:"30px 0"}}>
+          <div style={{fontSize:48,marginBottom:16}}>🔍</div>
+          <div style={{fontSize:16,fontWeight:800,color:T.text,marginBottom:8}}>Analyse en cours…</div>
+          <div style={{fontSize:13,color:T.muted,marginBottom:24}}>{mode==="etiquette"?"Lecture du lot, DLC et poids…":"Extraction des articles et prix…"}</div>
+          <div style={{display:"flex",gap:6,justifyContent:"center"}}>
+            {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:T.accent,animation:`pulse 1.2s ease-in-out ${i*0.2}s infinite`}}/>)}
+          </div>
+        </div>}
+        {step==="result"&&mode==="etiquette"&&result&&<>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+            <div style={{width:36,height:36,borderRadius:10,background:T.gs,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>✓</div>
+            <div><div style={{fontSize:15,fontWeight:800,color:T.green}}>Étiquette lue !</div><div style={{fontSize:11,color:T.muted}}>Traçabilité HACCP prête</div></div>
+          </div>
+          {[["Produit",result.produit],["Fournisseur",result.fournisseur],["N° de lot",result.lot],["DLC",result.dlc],["Poids",result.poids],["Temp. réception",result.temp]].map(([k,v])=>(
+            <div key={k} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:`1px solid ${T.cb}`}}>
+              <span style={{fontSize:12,color:T.muted}}>{k}</span><span style={{fontSize:12,fontWeight:700,color:T.text}}>{v}</span>
+            </div>
+          ))}
+          <button style={{width:"100%",padding:14,borderRadius:12,background:T.green,border:"none",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",marginTop:16}} onClick={onClose}>✓ Enregistrer dans HACCP</button>
+        </>}
+        {step==="result"&&mode==="facture"&&result&&<>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+            <div style={{width:36,height:36,borderRadius:10,background:T.as,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>📦</div>
+            <div><div style={{fontSize:15,fontWeight:800,color:T.accent}}>Facture analysée !</div><div style={{fontSize:11,color:T.muted}}>{result.fournisseur} · {result.date}</div></div>
+          </div>
+          {result.articles.map((a,i)=>(
+            <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:`1px solid ${T.cb}`}}>
+              <div><div style={{fontSize:13,fontWeight:600,color:T.text}}>{a.nom}</div><div style={{fontSize:11,color:T.muted}}>{a.qte} × {a.pu}</div></div>
+              <span style={{fontSize:13,fontWeight:800,color:T.accent}}>{a.total}</span>
+            </div>
+          ))}
+          <div style={{display:"flex",justifyContent:"space-between",padding:"10px 0 0"}}>
+            <span style={{fontSize:14,fontWeight:800,color:T.text}}>Total</span>
+            <span style={{fontSize:14,fontWeight:900,color:T.accent}}>{result.total}</span>
+          </div>
+          <button style={{width:"100%",padding:14,borderRadius:12,background:T.accent,border:"none",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",marginTop:14}} onClick={onClose}>📦 Mettre à jour les stocks</button>
+        </>}
+      </div>
+    </div>
+  );
+}
+
+function FrigoModal({onClose}){
+  const frigos=[{key:"f1",label:"Frigo 1",icon:"🔵",min:0,max:4},{key:"f2",label:"Frigo 2",icon:"🔵",min:0,max:4},{key:"f3",label:"Frigo Poissons",icon:"🐟",min:0,max:3},{key:"cf",label:"Chambre froide",icon:"❄️",min:-2,max:4}];
+  const [temps,setTemps]=useState({f1:"",f2:"",f3:"",cf:""});
+  const [saved,setSaved]=useState(false);
+  const isOk=(key,val)=>{if(val==="")return null;const f=frigos.find(f=>f.key===key);const n=parseFloat(val);return n>=f.min&&n<=f.max;};
+  const allFilled=frigos.every(f=>temps[f.key]!=="");
+  const nbAlerts=frigos.filter(f=>isOk(f.key,temps[f.key])===false).length;
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:100,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"flex-end"}}>
+      <div style={{width:"100%",maxWidth:420,margin:"0 auto",background:T.card,borderRadius:"24px 24px 0 0",padding:"24px 20px 40px",border:`1px solid ${T.cb}`}}>
+        <div style={{width:40,height:4,background:T.cb,borderRadius:2,margin:"0 auto 20px"}}/>
+        {!saved?<>
+          <div style={{fontSize:16,fontWeight:800,color:T.text,marginBottom:4}}>🌡️ Relevé températures</div>
+          <div style={{fontSize:12,color:T.muted,marginBottom:18}}>Saisis en °C — archivé automatiquement</div>
+          {frigos.map(f=>{
+            const val=temps[f.key];const ok=isOk(f.key,val);
+            return <div key={f.key} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:12,marginBottom:8,background:ok===true?T.gs:ok===false?T.rs:T.bg,border:`1.5px solid ${ok===true?T.green+"60":ok===false?T.red+"60":T.cb}`,transition:"all 0.2s"}}>
+              <span style={{fontSize:22,flexShrink:0}}>{f.icon}</span>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:700,color:T.text}}>{f.label}</div>
+                <div style={{fontSize:10,color:T.muted}}>Norme : {f.min}°C à {f.max}°C</div>
+              </div>
+              <input type="number" step="0.1" placeholder="—" value={val} onChange={e=>setTemps(t=>({...t,[f.key]:e.target.value}))} style={{width:58,padding:"8px 6px",borderRadius:8,fontSize:17,fontWeight:800,textAlign:"center",background:T.card,border:`1.5px solid ${ok===true?T.green:ok===false?T.red:T.cb}`,color:ok===false?T.red:T.text,outline:"none"}}/>
+              <span style={{fontSize:12,color:T.muted}}>°C</span>
+              <span style={{fontSize:16,width:20}}>{ok===true?"✅":ok===false?"🚨":""}</span>
+            </div>;
+          })}
+          <button onClick={()=>setSaved(true)} disabled={!allFilled} style={{width:"100%",padding:14,borderRadius:12,marginTop:8,background:allFilled?T.blue:T.cb,border:"none",color:allFilled?"#fff":T.muted,fontWeight:800,fontSize:14,cursor:allFilled?"pointer":"default",transition:"all 0.2s"}}>
+            {allFilled?"✓ Enregistrer le relevé":`Remplis les ${frigos.filter(f=>temps[f.key]==="").length} temp. restantes`}
+          </button>
+          <button onClick={onClose} style={{width:"100%",padding:10,borderRadius:10,marginTop:8,border:"none",background:"transparent",color:T.muted,fontWeight:700,fontSize:13,cursor:"pointer"}}>Annuler</button>
+        </>:<div style={{textAlign:"center",padding:"20px 0"}}>
+          <div style={{fontSize:52,marginBottom:12}}>{nbAlerts===0?"✅":"⚠️"}</div>
+          <div style={{fontSize:16,fontWeight:800,color:nbAlerts===0?T.green:T.yellow,marginBottom:6}}>Relevé enregistré !</div>
+          <div style={{fontSize:13,color:T.muted,marginBottom:20}}>{nbAlerts===0?"Tous les frigos sont conformes 👌":`${nbAlerts} température(s) hors norme — archivée`}</div>
+          <button onClick={onClose} style={{width:"100%",padding:14,borderRadius:12,background:nbAlerts===0?T.green:T.yellow,border:"none",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer"}}>Fermer</button>
+        </div>}
+      </div>
+    </div>
+  );
+}
+
+function Dashboard({openScan,openFrigo}){
+  const [done,setDone]=useState([true,true,false,false,false]);
+  const prepa=["Fond de veau · 3L","Sauce béarnaise · 500ml","Tailler légumes brunoise · 2kg","Portionner le saumon · 8 portions","Monter les crèmes brûlées · 20 pièces"];
+  return <div>
+    <Card style={{background:"linear-gradient(135deg,#1a1d27 0%,#23263a 100%)",borderColor:T.accent+"40"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+        <div>
+          <div style={{fontSize:12,color:T.muted,marginBottom:4}}>Jeudi 22 mai · Service midi</div>
+          <div style={{fontSize:21,fontWeight:800,color:T.text,fontFamily:"Georgia,serif"}}>Bonjour Chef 👨‍🍳</div>
+          <div style={{fontSize:13,color:T.muted,marginTop:4}}>Weekend chargé · <span style={{color:T.yellow}}>↑ +30% couverts</span></div>
+        </div>
+        <div style={{textAlign:"right"}}>
+          <div style={{fontSize:28,fontWeight:900,color:T.accent}}>42</div>
+          <div style={{fontSize:11,color:T.muted}}>couverts réservés</div>
+        </div>
+      </div>
+    </Card>
+    <ST>⚡ Actions rapides</ST>
+    <div style={{display:"flex",gap:8,marginBottom:14}}>
+      <BigBtn icon="📸" label="Scan étiquette" sublabel="Traçabilité lot" color={T.accent} onClick={()=>openScan("etiquette")}/>
+      <BigBtn icon="🧾" label="Scan facture" sublabel="Import stocks auto" color={T.blue} onClick={()=>openScan("facture")}/>
+      <BigBtn icon="🌡️" label="Relevé frigo" sublabel="Températures HACCP" color={T.purple} onClick={openFrigo}/>
+    </div>
+    <Card style={{borderLeft:`3px solid ${T.red}`}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div>
+          <div style={{fontWeight:700,color:T.text,fontSize:14}}>DLC critique</div>
+          <div style={{fontSize:12,color:T.muted,marginTop:2}}>Saumon frais · Agneau · Crème fraîche</div>
+        </div>
+        <Badge color="red">3 produits</Badge>
+      </div>
+    </Card>
+    <ST>📋 Prépa — Midi</ST>
+    {prepa.map((t,i)=>(
+      <div key={i} onClick={()=>setDone(d=>d.map((v,j)=>j===i?!v:v))} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:done[i]?T.gs:T.card,border:`1px solid ${done[i]?T.green+"40":T.cb}`,borderRadius:10,marginBottom:6,cursor:"pointer"}}>
+        <div style={{width:20,height:20,borderRadius:6,border:`2px solid ${done[i]?T.green:T.cb}`,background:done[i]?T.green:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          {done[i]&&<span style={{color:"#fff",fontSize:11,fontWeight:900}}>✓</span>}
+        </div>
+        <span style={{fontSize:13,fontWeight:600,color:done[i]?T.muted:T.text,textDecoration:done[i]?"line-through":"none"}}>{t}</span>
+      </div>
+    ))}
+  </div>;
+}
+
+function Stocks({openScan}){
+  const familles=[
+    {nom:"Viandes & Volailles",items:[{nom:"Filet de bœuf",stock:1.2,unite:"kg",seuil:3,dlc:"23/05"},{nom:"Magret de canard",stock:4,unite:"pièces",seuil:4,dlc:"25/05"},{nom:"Poulet fermier",stock:6,unite:"kg",seuil:2,dlc:"24/05"}]},
+    {nom:"Poissons",items:[{nom:"Saumon frais",stock:0.8,unite:"kg",seuil:2,dlc:"22/05"},{nom:"Saint-Jacques",stock:12,unite:"pièces",seuil:8,dlc:"23/05"}]},
+    {nom:"Épicerie",items:[{nom:"Farine T55",stock:1.5,unite:"kg",seuil:5,dlc:"12/08"},{nom:"Huile d'olive",stock:2,unite:"L",seuil:1,dlc:"01/11"}]},
+  ];
+  return <div>
+    <div style={{display:"flex",gap:8,marginBottom:14}}>
+      <BigBtn icon="🧾" label="Scan facture" sublabel="Mise à jour auto" color={T.blue} onClick={()=>openScan("facture")}/>
+      <BigBtn icon="📸" label="Scan étiquette" sublabel="Ajouter un produit" color={T.accent} onClick={()=>openScan("etiquette")}/>
+    </div>
+    {familles.map((f,fi)=><div key={fi}>
+      <ST>{f.nom}</ST>
+      {f.items.map((item,i)=>{
+        const ratio=item.stock/item.seuil;
+        const color=ratio<=0.5?T.red:ratio<=1?T.yellow:T.green;
+        return <Card key={i} style={{padding:"12px 14px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+            <div>
+              <div style={{fontWeight:700,fontSize:14,color:T.text}}>{item.nom}</div>
+              <div style={{fontSize:11,color:T.muted,marginTop:2}}>DLC : <span style={{color:ratio<=0.5?T.red:T.muted}}>{item.dlc}</span> · min {item.seuil} {item.unite}</div>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <span style={{fontSize:18,fontWeight:900,color}}>{item.stock}</span>
+              <span style={{fontSize:11,color:T.muted}}> {item.unite}</span>
+            </div>
+          </div>
+          <div style={{background:T.cb,borderRadius:4,height:4}}>
+            <div style={{width:`${Math.min(100,ratio*100)}%`,background:color,height:4,borderRadius:4}}/>
+          </div>
+        </Card>;
+      })}
+    </div>)}
+  </div>;
+}
+
+function HACCP({openScan,openFrigo}){
+  const frigos=[{nom:"Frigo 1",temp:"3°C",ok:true},{nom:"Frigo 2",temp:"4°C",ok:true},{nom:"Frigo Poissons",temp:"2°C",ok:true},{nom:"Chambre froide",temp:"1°C",ok:true}];
+  const logs=[
+    {date:"21/05 08h15",four:"Metro",produit:"Saumon frais",temp:"2°C",lot:"FR-29-001-A",ok:true},
+    {date:"21/05 07h30",four:"Transgourmet",produit:"Viandes",temp:"3°C",lot:"FR-75-234-B",ok:true},
+    {date:"20/05 07h00",four:"Pomona",produit:"Légumes",temp:"8°C",lot:"—",ok:false},
+  ];
+  return <div>
+    <Card style={{background:`linear-gradient(135deg,${T.gs} 0%,${T.card} 100%)`,borderColor:T.green+"40"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div>
+          <div style={{fontWeight:800,fontSize:15,color:T.green}}>✓ Conforme ce mois</div>
+          <div style={{fontSize:12,color:T.muted,marginTop:2}}>Dernier relevé : 08h00</div>
+        </div>
+        <div style={{textAlign:"right"}}>
+          <div style={{fontSize:24,fontWeight:900,color:T.green}}>94%</div>
+          <div style={{fontSize:10,color:T.muted}}>conformité</div>
+        </div>
+      </div>
+    </Card>
+    <ST>🌡️ Températures frigos</ST>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
+      {frigos.map((f,i)=>(
+        <div key={i} style={{background:f.ok?T.gs:T.rs,border:`1.5px solid ${f.ok?T.green+"50":T.red+"50"}`,borderRadius:12,padding:"12px 14px"}}>
+          <div style={{fontSize:11,color:T.muted,marginBottom:4}}>{f.nom}</div>
+          <div style={{fontSize:22,fontWeight:900,color:f.ok?T.green:T.red}}>{f.temp}</div>
+          <div style={{fontSize:10,color:T.muted,marginTop:2}}>08h00 · {f.ok?"✓ OK":"⚠ Alerte"}</div>
+        </div>
+      ))}
+    </div>
+    <button onClick={openFrigo} style={{width:"100%",padding:12,borderRadius:12,marginBottom:12,background:T.ps,border:`1.5px solid ${T.purple}50`,color:T.purple,fontWeight:800,fontSize:13,cursor:"pointer"}}>🌡️ Nouveau relevé de températures</button>
+    <div style={{display:"flex",gap:8,marginBottom:14}}>
+      <button onClick={()=>openScan("etiquette")} style={{flex:1,padding:11,borderRadius:10,background:T.as,border:`1px solid ${T.accent}40`,color:T.accent,fontWeight:700,fontSize:13,cursor:"pointer"}}>📸 Scanner étiquette</button>
+      <button onClick={()=>openScan("facture")} style={{flex:1,padding:11,borderRadius:10,background:T.bs,border:`1px solid ${T.blue}40`,color:T.blue,fontWeight:700,fontSize:13,cursor:"pointer"}}>🧾 Scanner facture</button>
+    </div>
+    <ST>Historique traçabilité</ST>
+    {logs.map((log,i)=>(
+      <Card key={i} style={{padding:"10px 14px",borderLeft:`3px solid ${log.ok?T.green:T.red}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div>
+            <div style={{fontSize:13,fontWeight:700,color:T.text}}>{log.produit} <span style={{color:T.muted,fontWeight:400}}>· {log.four}</span></div>
+            <div style={{fontSize:11,color:T.muted,marginTop:2}}>{log.date} · Lot : {log.lot}</div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:15,fontWeight:800,color:log.ok?T.green:T.red}}>{log.temp}</div>
+            {!log.ok&&<div style={{fontSize:10,color:T.red}}>⚠ Non conforme</div>}
+          </div>
+        </div>
+      </Card>
+    ))}
+  </div>;
+}
+
+function Commandes(){
+  const fournisseurs=[
+    {nom:"Metro",items:[{produit:"Filet de bœuf",qte:"4 kg",urgence:true},{produit:"Farine T55",qte:"10 kg",urgence:false},{produit:"Crème liquide",qte:"6 L",urgence:false}]},
+    {nom:"Transgourmet",items:[{produit:"Saumon frais",qte:"3 kg",urgence:true},{produit:"Saint-Jacques",qte:"2 kg",urgence:false}]},
+  ];
+  return <div>
+    <Card style={{borderColor:T.accent+"40"}}>
+      <div style={{fontSize:12,color:T.muted,marginBottom:4}}>Générée automatiquement · Weekend +30%</div>
+      <div style={{fontWeight:800,fontSize:15,color:T.text}}>Commande du vendredi 23 mai</div>
+      <div style={{display:"flex",gap:8,marginTop:10}}><Badge color="red">2 urgents</Badge><Badge color="blue">5 articles</Badge></div>
+    </Card>
+    {fournisseurs.map((f,fi)=><div key={fi}>
+      <ST>📦 {f.nom}</ST>
+      {f.items.map((item,i)=>(
+        <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:T.card,border:`1px solid ${item.urgence?T.red+"50":T.cb}`,borderRadius:10,marginBottom:6}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <div style={{width:8,height:8,borderRadius:"50%",background:item.urgence?T.red:T.green,flexShrink:0}}/>
+            <span style={{fontSize:13,fontWeight:600,color:T.text}}>{item.produit}</span>
+          </div>
+          <span style={{fontSize:13,fontWeight:700,color:T.accent}}>{item.qte}</span>
+        </div>
+      ))}
+    </div>)}
+    <button style={{width:"100%",padding:14,borderRadius:12,background:T.accent,border:"none",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",marginTop:8}}>📤 Envoyer les commandes</button>
+  </div>;
+}
+
+function Marges(){
+  const plats=[
+    {nom:"Filet de bœuf sauce poivre",vendu:18,prix:26,cout:9.2,marge:64.6},
+    {nom:"Saumon mi-cuit",vendu:12,prix:22,cout:7.8,marge:64.5},
+    {nom:"Magret de canard",vendu:8,prix:24,cout:10.1,marge:57.9},
+    {nom:"Crème brûlée maison",vendu:22,prix:7,cout:1.4,marge:80.0},
+    {nom:"Tartare de bœuf",vendu:6,prix:20,cout:8.5,marge:57.5},
+  ];
+  const ca=plats.reduce((s,p)=>s+p.vendu*p.prix,0);
+  const avg=plats.reduce((s,p)=>s+p.marge,0)/plats.length;
+  return <div>
+    <div style={{display:"flex",gap:10,marginBottom:12}}>
+      {[{label:"CA semaine",val:`${ca}€`,color:T.accent},{label:"Marge moy.",val:`${avg.toFixed(1)}%`,color:T.green}].map((s,i)=>(
+        <Card key={i} style={{flex:1,textAlign:"center",marginBottom:0}}>
+          <div style={{fontSize:22,fontWeight:900,color:s.color}}>{s.val}</div>
+          <div style={{fontSize:11,color:T.muted,marginTop:2}}>{s.label}</div>
+        </Card>
+      ))}
+    </div>
+    <ST>Analyse par plat</ST>
+    {plats.map((p,i)=>(
+      <Card key={i} style={{padding:"12px 14px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+          <div style={{flex:1,marginRight:10}}>
+            <div style={{fontSize:13,fontWeight:700,color:T.text}}>{p.nom}</div>
+            <div style={{fontSize:11,color:T.muted,marginTop:1}}>Vendu : {p.vendu} · Coût : {p.cout}€ · PV : {p.prix}€</div>
+          </div>
+          <span style={{fontSize:16,fontWeight:900,color:p.marge>=65?T.green:p.marge>=55?T.yellow:T.red}}>{p.marge}%</span>
+        </div>
+        <div style={{background:T.cb,borderRadius:4,height:4}}>
+          <div style={{width:`${p.marge}%`,height:4,borderRadius:4,background:p.marge>=65?T.green:p.marge>=55?T.yellow:T.red}}/>
+        </div>
+      </Card>
+    ))}
+  </div>;
+}
+
+const SCREENS=["Dashboard","Stocks","HACCP","Commandes","Marges"];
+const ICONS=["⚡","📦","🛡️","🛒","📊"];
+
+function App(){
+  const [active,setActive]=useState(0);
+  const [scanMode,setScanMode]=useState(null);
+  const [frigoOpen,setFrigoOpen]=useState(false);
+  const p={openScan:setScanMode,openFrigo:()=>setFrigoOpen(true)};
+  return(
+    <div style={{background:T.bg,minHeight:"100vh",fontFamily:"'DM Sans','Segoe UI',sans-serif",color:T.text,display:"flex",justifyContent:"center",padding:"0 0 80px 0"}}>
+      <div style={{width:"100%",maxWidth:420}}>
+        <div style={{padding:"20px 20px 12px",background:T.bg,position:"sticky",top:0,zIndex:10,borderBottom:`1px solid ${T.cb}`,marginBottom:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div style={{fontSize:18,fontWeight:900,fontFamily:"Georgia,serif",color:T.text}}><span style={{color:T.accent}}>Chef</span>OS</div>
+            <div style={{display:"flex",gap:6,alignItems:"center"}}>
+              <div style={{width:8,height:8,borderRadius:"50%",background:T.green}}/>
+              <span style={{fontSize:11,color:T.muted}}>En service</span>
+            </div>
+          </div>
+        </div>
+        <div style={{padding:"0 16px"}}>
+          {active===0&&<Dashboard {...p}/>}
+          {active===1&&<Stocks {...p}/>}
+          {active===2&&<HACCP {...p}/>}
+          {active===3&&<Commandes/>}
+          {active===4&&<Marges/>}
+        </div>
+        <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:420,background:T.card,borderTop:`1px solid ${T.cb}`,display:"flex",padding:"8px 0 12px",zIndex:20}}>
+          {SCREENS.map((s,i)=>(
+            <button key={i} onClick={()=>setActive(i)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,background:"none",border:"none",cursor:"pointer",padding:"4px 0"}}>
+              <span style={{fontSize:18}}>{ICONS[i]}</span>
+              <span style={{fontSize:9,fontWeight:700,letterSpacing:0.5,color:active===i?T.accent:T.muted,textTransform:"uppercase"}}>{s.split(" ")[0]}</span>
+              {active===i&&<div style={{width:20,height:2,background:T.accent,borderRadius:2}}/>}
+            </button>
+          ))}
+        </div>
+      </div>
+      {scanMode&&<ScanModal mode={scanMode} onClose={()=>setScanMode(null)}/>}
+      {frigoOpen&&<FrigoModal onClose={()=>setFrigoOpen(false)}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
+HTMLEOF
+echo "Done"
